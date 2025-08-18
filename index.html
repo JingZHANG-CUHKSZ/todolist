@@ -11,33 +11,51 @@
         <header>
             <h1>📝 我的待办事项</h1>
         </header>
-        
+
+        <!-- 协作房间区域 -->
+        <div class="todo-input-container" style="border-bottom: 1px solid #f0f0f0;">
+            <input type="text" id="roomIdInput" placeholder="输入或生成房间号（例如：team123）" maxlength="40" style="flex: 1;">
+            <button id="createRoomBtn">创建房间</button>
+            <button id="joinRoomBtn">加入房间</button>
+            <button id="copyInviteBtn" title="复制邀请链接">复制链接</button>
+        </div>
+        <div class="stats" id="roomStatusBar" style="display: none;">
+            <span id="roomStatus">未加入房间</span>
+        </div>
+
         <div class="todo-input-container">
             <input type="text" id="todoInput" placeholder="输入新的待办事项..." maxlength="200">
             <button id="addBtn" onclick="addTodo()">添加</button>
         </div>
-        
+
         <div class="stats">
             <span id="totalCount">总数: 0</span>
             <span id="completedCount">已完成: 0</span>
             <span id="remainingCount">剩余: 0</span>
         </div>
-        
+
         <div class="filter-buttons">
             <button class="filter-btn active" data-filter="all">全部</button>
             <button class="filter-btn" data-filter="active">未完成</button>
             <button class="filter-btn" data-filter="completed">已完成</button>
         </div>
-        
-        <ul id="todoList" class="todo-list">
-            <!-- 待办事项将在这里动态生成 -->
-        </ul>
-        
+
+        <ul id="todoList" class="todo-list"></ul>
+
         <div class="clear-completed-container">
             <button id="clearCompleted" onclick="clearCompleted()">清除已完成</button>
         </div>
     </div>
-    
+
+    <!-- Firebase SDK（Compat 版本，便于直接使用） -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+    <!-- 你的 Firebase 配置（占位，需填写） -->
+    <script src="firebase-config.js"></script>
+    <!-- 协作逻辑 -->
+    <script src="collab.js"></script>
+    <!-- 本地待办逻辑 -->
     <script src="script.js"></script>
 </body>
 </html>
+

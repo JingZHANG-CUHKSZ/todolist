@@ -22,6 +22,18 @@
 
 访问地址：[点击这里查看网站](https://你的用户名.github.io/todolist-website)
 
+## 🤝 多人协作（Firebase）
+
+1. 打开 `https://console.firebase.google.com` 创建项目 → 添加 Web 应用（</>）
+2. 在“项目设置 → 常规 → 你的应用（Web）”复制配置，粘贴到 `firebase-config.js` 中占位位置
+3. 在 Firebase → Build → Firestore Database 创建数据库（测试模式即可）
+4. 本地测试或部署到 Pages 后，打开页面：
+   - 点击“创建房间”生成房间号，或输入共同的房间号后“加入房间”
+   - 点击“复制链接”分享给他人（链接中带有 room 参数）
+5. 房间内的待办事项会实时同步（基于 Firestore）
+
+注意：生产环境请在 Firestore 规则中限制读写权限。
+
 ## 💡 技术栈
 
 - HTML5
