@@ -46,8 +46,7 @@ class TodoManager {
         const text = input.value.trim();
         
         if (text === '') {
-            alert('请输入待办事项内容！');
-            return;
+            return; // 静默返回，不显示弹窗
         }
 
         const todo = {

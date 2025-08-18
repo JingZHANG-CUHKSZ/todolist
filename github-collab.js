@@ -89,51 +89,107 @@
         function joinRoom(roomId) {
             currentRoomId = roomId;
 
-            // 显示状态栏
-            roomStatusBar.style.display = 'flex';
-            roomStatus.textContent = `已加入房间：${roomId} (本地协作)`;
-
-            // 强制清空所有本地数据
+            // 强制清空所有数据
             localStorage.clear();
             
-            // 立即清空URL中的旧数据，避免房间间数据污染
-            const url = new URL(window.location);
-            url.searchParams.delete('data'); // 删除旧的数据参数
-            url.searchParams.set('room', roomId); // 只保留房间名
-            window.history.replaceState({}, '', url);
-            
-            // 强制重置todoManager
+            // 停止原始TodoManager的所有功能
             if (window.todoManager) {
-                todoManager.todos = [];
-                todoManager.currentFilter = 'all';
-                todoManager.render();
-                todoManager.updateStats();
+                // 移除原始事件监听器
+                const addBtn = document.getElementById('addBtn');
+                const clearBtn = document.getElementById('clearCompleted');
+                const todoInput = document.getElementById('todoInput');
                 
-                // 重置筛选按钮
-                document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                document.querySelector('[data-filter="all"]').classList.add('active');
-            }
-
-            // 检查URL中是否有当前房间的数据
-            const roomData = getRoomDataFromUrl();
-            if (roomData && roomData.roomId === roomId && Array.isArray(roomData.todos) && roomData.todos.length > 0) {
-                // 只有明确匹配当前房间ID且有有效数据时才加载
-                if (window.todoManager) {
-                    todoManager.todos = roomData.todos;
-                    todoManager.render();
-                    todoManager.updateStats();
+                if (addBtn) {
+                    addBtn.onclick = null;
+                    addBtn.removeEventListener('click', window.todoManager.addTodo);
                 }
-                roomStatus.textContent = `已加入房间：${roomId} (已同步 ${new Date(roomData.lastUpdated).toLocaleTimeString()})`;
-            } else {
-                // 新房间或无匹配数据，初始化为空
-                updateUrlWithRoomData(roomId, []);
-                roomStatus.textContent = `已创建房间：${roomId} (空房间)`;
+                if (clearBtn) {
+                    clearBtn.onclick = null;
+                    clearBtn.removeEventListener('click', window.todoManager.clearCompleted);
+                }
+                if (todoInput) {
+                    todoInput.onkeypress = null;
+                    // 移除可能的keypress事件监听器
+                    const newInput = todoInput.cloneNode(true);
+                    todoInput.parentNode.replaceChild(newInput, todoInput);
+                }
+                
+                // 彻底清空原始数据和方法
+                window.todoManager.todos = [];
+                window.todoManager.saveTodos = function() {};
+                
+                // 禁用原始的键盘快捷键功能
+                if (!window.collabKeydownHandler) {
+                    window.collabKeydownHandler = function(e) {
+                        if (e.key >= '1' && e.key <= '3') {
+                            e.stopPropagation();
+                            e.preventDefault();
+                        }
+                    };
+                    document.addEventListener('keydown', window.collabKeydownHandler, true);
+                }
             }
+            
+            // 立即清空URL，只保留基本路径
+            const baseUrl = window.location.origin + window.location.pathname;
+            window.history.replaceState({}, '', baseUrl + '?room=' + encodeURIComponent(roomId));
+            
+            // 强制创建或重置todoManager
+            function resetTodoManager() {
+                // 如果todoManager不存在，直接创建一个简单版本
+                if (!window.todoManager) {
+                    window.todoManager = {
+                        todos: [],
+                        render: function() {
+                            const todoList = document.getElementById('todoList');
+                            if (todoList) {
+                                if (this.todos.length === 0) {
+                                    todoList.innerHTML = '<div class="empty-state"><p>还没有待办事项，快来添加一个吧！</p></div>';
+                                } else {
+                                    // 简单的渲染逻辑，显示所有任务
+                                    todoList.innerHTML = this.todos.map(todo => `
+                                        <li class="todo-item ${todo.completed ? 'completed' : ''}">
+                                            <div class="todo-checkbox ${todo.completed ? 'checked' : ''}" data-id="${todo.id}" onclick="window.todoManager.toggleTodo(${todo.id})"></div>
+                                            <span class="todo-text">${todo.text}</span>
+                                            <span class="todo-date">创建于: ${todo.createdAt}</span>
+                                            <button class="delete-btn" data-id="${todo.id}" onclick="window.todoManager.deleteTodo(${todo.id})">删除</button>
+                                        </li>
+                                    `).join('');
+                                }
+                            }
+                        },
+                        updateStats: function() {
+                            const total = this.todos.length;
+                            const completed = this.todos.filter(todo => todo.completed).length;
+                            const remaining = total - completed;
+                            
+                            const totalCount = document.getElementById('totalCount');
+                            const completedCount = document.getElementById('completedCount');
+                            const remainingCount = document.getElementById('remainingCount');
+                            
+                            if (totalCount) totalCount.textContent = `总数: ${total}`;
+                            if (completedCount) completedCount.textContent = `已完成: ${completed}`;
+                            if (remainingCount) remainingCount.textContent = `剩余: ${remaining}`;
+                        }
+                    };
+                }
+                
+                window.todoManager.todos = [];
+                window.todoManager.render();
+                window.todoManager.updateStats();
+                
+                // 替换todoManager的方法
+                patchTodoManager(roomId);
+            }
+            
+            resetTodoManager();
 
-            // 替换todoManager的方法
-            patchTodoManager(roomId);
+            // 显示状态栏
+            roomStatusBar.style.display = 'flex';
+            roomStatus.textContent = `已创建房间：${roomId} (空房间)`;
+
+            // 初始化空房间数据到URL
+            updateUrlWithRoomData(roomId, []);
         }
 
         // 保存房间数据到URL
@@ -146,15 +202,23 @@
                 if (!window.todoManager) return;
                 clearInterval(checkManager);
 
-                // 绑定按钮事件
+                // 重新绑定所有事件
                 const addBtn = document.getElementById('addBtn');
                 const clearBtn = document.getElementById('clearCompleted');
+                const todoInput = document.getElementById('todoInput');
                 
                 if (addBtn) {
                     addBtn.onclick = () => todoManager.addTodo();
                 }
                 if (clearBtn) {
                     clearBtn.onclick = () => todoManager.clearCompleted();
+                }
+                if (todoInput) {
+                    todoInput.addEventListener('keypress', (e) => {
+                        if (e.key === 'Enter') {
+                            todoManager.addTodo();
+                        }
+                    });
                 }
 
                 // 覆盖保存方法
@@ -167,7 +231,10 @@
                 todoManager.addTodo = function () {
                     const input = document.getElementById('todoInput');
                     const text = (input.value || '').trim();
-                    if (!text) { alert('请输入待办事项内容！'); return; }
+                    
+                    if (!text) { 
+                        return; 
+                    }
                     
                     const todo = {
                         id: Date.now(),
