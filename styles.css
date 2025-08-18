@@ -66,6 +66,32 @@ body {
 }
 
 /* 输入组件 */
+.input-row {
+    margin-bottom: 16px;
+}
+
+.input-row input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 16px;
+    background: var(--card-bg);
+    transition: all 0.2s ease;
+}
+
+.input-row input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.button-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
 .input-group {
     display: flex;
     gap: 12px;

@@ -62,19 +62,17 @@ class GroupTaskManager {
             return;
         }
 
-        // 检查是否需要GitHub配置
-        const needsGithubConfig = !this.loadGithubConfigFromStorage();
-        
-        if (needsGithubConfig) {
-            const token = prompt('请输入GitHub Token（用于数据同步）：\n\n如果没有token，可以去 https://github.com/settings/tokens 创建一个\n\n⚠️ Token会保存到本地，方便下次使用');
+        // 检查是否需要GitHub配置 - 统一仓库模式
+        if (!this.githubConfig) {
+            const token = prompt('需要GitHub Token来创建群组：\n\n⚠️ 所有群组数据将存储在统一的GitHub仓库中\n\n请输入GitHub Token:');
             if (!token) {
                 return;
             }
             
             this.githubConfig = {
                 token: token,
-                owner: 'JingZHANG-CUHKSZ', // 你的GitHub用户名
-                repo: 'todolist',          // 使用现有仓库
+                owner: 'JingZHANG-CUHKSZ', // 统一仓库所有者
+                repo: 'todolist',          // 统一仓库
                 branch: 'main'
             };
             
@@ -96,7 +94,7 @@ class GroupTaskManager {
         this.tasks = [];
         
         try {
-            // 保存到GitHub
+            // 保存到统一GitHub仓库
             await this.saveToGithub();
             this.showGroupInterface();
             this.updateUrlSimple(); // 使用简单URL
@@ -125,17 +123,23 @@ class GroupTaskManager {
             return;
         }
 
-        // 检查是否有GitHub配置
-        let githubConfig = this.loadGithubConfigFromStorage() || 
-                          this.loadGithubConfigFromFragment() ||
-                          this.loadGithubConfigFromUrl();
-        
-        if (!githubConfig) {
-            alert('无法加入群组！\n\n请通过以下方式加入：\n1. 使用朋友分享的完整链接\n2. 或者先创建群组获取权限');
-            return;
+        // 统一仓库模式：使用固定的仓库配置
+        if (!this.githubConfig) {
+            // 尝试从存储或URL加载配置
+            this.githubConfig = this.loadGithubConfigFromStorage() || 
+                               this.loadGithubConfigFromFragment() ||
+                               this.loadGithubConfigFromUrl();
+            
+            // 如果还是没有，使用统一仓库配置（无需token，只读模式）
+            if (!this.githubConfig) {
+                this.githubConfig = {
+                    token: null, // 公开仓库不需要token
+                    owner: 'JingZHANG-CUHKSZ', // 统一仓库所有者
+                    repo: 'todolist',          // 统一仓库
+                    branch: 'main'
+                };
+            }
         }
-
-        this.githubConfig = githubConfig;
 
         try {
             // 尝试按群组ID直接查找（ID通常是大写）
@@ -158,12 +162,12 @@ class GroupTaskManager {
                 this.startAutoSync();
                 joinInput.value = '';
             } else {
-                alert(`未找到群组：${joinValue}\n\n可能原因：\n1. 群组ID或名称不正确\n2. 群组尚未创建\n3. 您没有访问权限\n\n建议使用朋友分享的完整链接加入`);
+                alert(`未找到群组：${joinValue}\n\n可能原因：\n1. 群组ID或名称不正确\n2. 群组尚未创建\n\n请确认群组信息是否正确`);
             }
 
         } catch (error) {
             console.error('加入群组失败:', error);
-            alert('加入群组失败：' + error.message + '\n\n建议使用朋友分享的完整链接加入');
+            alert('加入群组失败：' + error.message);
         }
     }
 
@@ -173,14 +177,18 @@ class GroupTaskManager {
 
         try {
             // 获取data文件夹下的所有文件
+            const headers = {
+                'Accept': 'application/vnd.github.v3+json'
+            };
+            
+            // 如果有token，添加认证头
+            if (this.githubConfig.token) {
+                headers['Authorization'] = `token ${this.githubConfig.token}`;
+            }
+            
             const response = await fetch(
                 `https://api.github.com/repos/${this.githubConfig.owner}/${this.githubConfig.repo}/contents/data`,
-                {
-                    headers: {
-                        'Authorization': `token ${this.githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                }
+                { headers }
             );
 
             if (!response.ok) {
@@ -265,6 +273,12 @@ class GroupTaskManager {
             return; // 静默返回
         }
 
+        // 先检查权限
+        if (!this.githubConfig || !this.githubConfig.token) {
+            alert('无法添加任务：没有编辑权限\n\n如需编辑任务，请使用朋友分享的完整链接或输入GitHub Token');
+            return;
+        }
+
         const task = {
             id: Date.now().toString(),
             text: taskText,
@@ -280,20 +294,23 @@ class GroupTaskManager {
         this.updateTaskList();
         this.updateStats();
         
-        // 保存到GitHub（如果有配置）
-        if (this.githubConfig) {
-            try {
-                await this.saveToGithub();
-            } catch (error) {
-                console.error('保存失败:', error);
-            }
-        } else {
-            this.updateUrl();
+        // 保存到GitHub
+        try {
+            await this.saveToGithub();
+        } catch (error) {
+            console.error('保存失败:', error);
+            alert('保存失败，您可能没有编辑权限');
         }
     }
 
     // 切换任务状态
     async toggleTask(taskId) {
+        // 先检查权限
+        if (!this.githubConfig || !this.githubConfig.token) {
+            alert('无法编辑任务：没有编辑权限\n\n如需编辑任务，请使用朋友分享的完整链接或输入GitHub Token');
+            return;
+        }
+        
         const task = this.tasks.find(t => t.id === taskId);
         if (task) {
             task.completed = !task.completed;
@@ -303,21 +320,24 @@ class GroupTaskManager {
             this.updateTaskList();
             this.updateStats();
             
-            // 保存到GitHub（如果有配置）
-            if (this.githubConfig) {
-                try {
-                    await this.saveToGithub();
-                } catch (error) {
-                    console.error('保存失败:', error);
-                }
-            } else {
-                this.updateUrl();
+            // 保存到GitHub
+            try {
+                await this.saveToGithub();
+            } catch (error) {
+                console.error('保存失败:', error);
+                alert('保存失败，您可能没有编辑权限');
             }
         }
     }
 
     // 删除任务
     async deleteTask(taskId) {
+        // 先检查权限
+        if (!this.githubConfig || !this.githubConfig.token) {
+            alert('无法删除任务：没有编辑权限\n\n如需编辑任务，请使用朋友分享的完整链接或输入GitHub Token');
+            return;
+        }
+        
         if (confirm('确定要删除这个任务吗？')) {
             this.tasks = this.tasks.filter(t => t.id !== taskId);
             this.currentGroup.tasks = this.tasks;
@@ -325,15 +345,12 @@ class GroupTaskManager {
             this.updateTaskList();
             this.updateStats();
             
-            // 保存到GitHub（如果有配置）
-            if (this.githubConfig) {
-                try {
-                    await this.saveToGithub();
-                } catch (error) {
-                    console.error('保存失败:', error);
-                }
-            } else {
-                this.updateUrl();
+            // 保存到GitHub
+            try {
+                await this.saveToGithub();
+            } catch (error) {
+                console.error('保存失败:', error);
+                alert('删除失败，您可能没有编辑权限');
             }
         }
     }
@@ -610,14 +627,18 @@ class GroupTaskManager {
         const fileName = `data/group-${groupId}.json`;
 
         try {
+            const headers = {
+                'Accept': 'application/vnd.github.v3+json'
+            };
+            
+            // 如果有token，添加认证头
+            if (this.githubConfig.token) {
+                headers['Authorization'] = `token ${this.githubConfig.token}`;
+            }
+            
             const response = await fetch(
                 `https://api.github.com/repos/${this.githubConfig.owner}/${this.githubConfig.repo}/contents/${fileName}`,
-                {
-                    headers: {
-                        'Authorization': `token ${this.githubConfig.token}`,
-                        'Accept': 'application/vnd.github.v3+json'
-                    }
-                }
+                { headers }
             );
 
             if (!response.ok) {
