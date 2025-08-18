@@ -94,7 +94,13 @@
             roomStatus.textContent = `已加入房间：${roomId} (本地协作)`;
 
             // 强制清空所有本地数据
-            localStorage.clear(); // 清空所有localStorage数据
+            localStorage.clear();
+            
+            // 立即清空URL中的旧数据，避免房间间数据污染
+            const url = new URL(window.location);
+            url.searchParams.delete('data'); // 删除旧的数据参数
+            url.searchParams.set('room', roomId); // 只保留房间名
+            window.history.replaceState({}, '', url);
             
             // 强制重置todoManager
             if (window.todoManager) {
@@ -110,10 +116,10 @@
                 document.querySelector('[data-filter="all"]').classList.add('active');
             }
 
-            // 尝试从URL加载数据
+            // 检查URL中是否有当前房间的数据
             const roomData = getRoomDataFromUrl();
-            if (roomData && roomData.roomId === roomId && roomData.todos) {
-                // 如果URL中有匹配的房间数据，加载它
+            if (roomData && roomData.roomId === roomId && Array.isArray(roomData.todos) && roomData.todos.length > 0) {
+                // 只有明确匹配当前房间ID且有有效数据时才加载
                 if (window.todoManager) {
                     todoManager.todos = roomData.todos;
                     todoManager.render();
@@ -121,8 +127,9 @@
                 }
                 roomStatus.textContent = `已加入房间：${roomId} (已同步 ${new Date(roomData.lastUpdated).toLocaleTimeString()})`;
             } else {
-                // 新房间，初始化空数据
+                // 新房间或无匹配数据，初始化为空
                 updateUrlWithRoomData(roomId, []);
+                roomStatus.textContent = `已创建房间：${roomId} (空房间)`;
             }
 
             // 替换todoManager的方法
