@@ -14,13 +14,6 @@
         "completedAt": "2025-08-18T19:48:58.564Z"
       },
       {
-        "id": "1755546405252",
-        "text": "剧本杀",
-        "completed": false,
-        "createdAt": "2025-08-18T19:46:45.252Z",
-        "createdBy": "我"
-      },
-      {
         "id": "1755546399487",
         "text": "做饭",
         "completed": false,
@@ -46,13 +39,6 @@
       "completedAt": "2025-08-18T19:48:58.564Z"
     },
     {
-      "id": "1755546405252",
-      "text": "剧本杀",
-      "completed": false,
-      "createdAt": "2025-08-18T19:46:45.252Z",
-      "createdBy": "我"
-    },
-    {
       "id": "1755546399487",
       "text": "做饭",
       "completed": false,
@@ -67,5 +53,5 @@
       "createdBy": "我"
     }
   ],
-  "lastUpdated": "2025-08-18T19:48:58.565Z"
+  "lastUpdated": "2025-08-18T19:50:06.241Z"
 }
