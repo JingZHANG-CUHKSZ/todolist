@@ -93,14 +93,21 @@
             roomStatusBar.style.display = 'flex';
             roomStatus.textContent = `已加入房间：${roomId} (本地协作)`;
 
-            // 清空localStorage避免数据污染
-            localStorage.removeItem('todos');
-
-            // 先清空当前数据
+            // 强制清空所有本地数据
+            localStorage.clear(); // 清空所有localStorage数据
+            
+            // 强制重置todoManager
             if (window.todoManager) {
                 todoManager.todos = [];
+                todoManager.currentFilter = 'all';
                 todoManager.render();
                 todoManager.updateStats();
+                
+                // 重置筛选按钮
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                document.querySelector('[data-filter="all"]').classList.add('active');
             }
 
             // 尝试从URL加载数据
