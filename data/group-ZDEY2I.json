@@ -6,6 +6,13 @@
     "createdBy": "创建者",
     "tasks": [
       {
+        "id": "1755546611000",
+        "text": "猫咪剧本杀",
+        "completed": false,
+        "createdAt": "2025-08-18T19:50:11.000Z",
+        "createdBy": "我"
+      },
+      {
         "id": "1755546523366",
         "text": "测试",
         "completed": true,
@@ -31,6 +38,13 @@
   },
   "tasks": [
     {
+      "id": "1755546611000",
+      "text": "猫咪剧本杀",
+      "completed": false,
+      "createdAt": "2025-08-18T19:50:11.000Z",
+      "createdBy": "我"
+    },
+    {
       "id": "1755546523366",
       "text": "测试",
       "completed": true,
@@ -53,5 +67,5 @@
       "createdBy": "我"
     }
   ],
-  "lastUpdated": "2025-08-18T19:50:06.241Z"
+  "lastUpdated": "2025-08-18T19:50:11.000Z"
 }
