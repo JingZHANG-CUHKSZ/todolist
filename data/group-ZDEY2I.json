@@ -6,6 +6,13 @@
     "createdBy": "创建者",
     "tasks": [
       {
+        "id": "1755546405252",
+        "text": "剧本杀",
+        "completed": false,
+        "createdAt": "2025-08-18T19:46:45.252Z",
+        "createdBy": "我"
+      },
+      {
         "id": "1755546399487",
         "text": "做饭",
         "completed": false,
@@ -23,6 +30,13 @@
   },
   "tasks": [
     {
+      "id": "1755546405252",
+      "text": "剧本杀",
+      "completed": false,
+      "createdAt": "2025-08-18T19:46:45.252Z",
+      "createdBy": "我"
+    },
+    {
       "id": "1755546399487",
       "text": "做饭",
       "completed": false,
@@ -37,5 +51,5 @@
       "createdBy": "我"
     }
   ],
-  "lastUpdated": "2025-08-18T19:46:39.487Z"
+  "lastUpdated": "2025-08-18T19:46:45.252Z"
 }
