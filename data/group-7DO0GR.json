@@ -1,0 +1,43 @@
+{
+  "group": {
+    "id": "7DO0GR",
+    "name": "西湖",
+    "createdAt": "2025-08-18T18:03:22.622Z",
+    "createdBy": "创建者",
+    "tasks": [
+      {
+        "id": "1755540322955",
+        "text": "滑雪",
+        "completed": false,
+        "createdAt": "2025-08-18T18:05:22.955Z",
+        "createdBy": "我"
+      },
+      {
+        "id": "1755540212508",
+        "text": "加油",
+        "completed": true,
+        "createdAt": "2025-08-18T18:03:32.508Z",
+        "createdBy": "我",
+        "completedAt": "2025-08-18T18:06:02.425Z"
+      }
+    ]
+  },
+  "tasks": [
+    {
+      "id": "1755540322955",
+      "text": "滑雪",
+      "completed": false,
+      "createdAt": "2025-08-18T18:05:22.955Z",
+      "createdBy": "我"
+    },
+    {
+      "id": "1755540212508",
+      "text": "加油",
+      "completed": true,
+      "createdAt": "2025-08-18T18:03:32.508Z",
+      "createdBy": "我",
+      "completedAt": "2025-08-18T18:06:02.425Z"
+    }
+  ],
+  "lastUpdated": "2025-08-18T18:06:02.425Z"
+}
