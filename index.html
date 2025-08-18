@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的待办事项</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📝 我的待办事项</h1>
+        </header>
+        
+        <div class="todo-input-container">
+            <input type="text" id="todoInput" placeholder="输入新的待办事项..." maxlength="200">
+            <button id="addBtn" onclick="addTodo()">添加</button>
+        </div>
+        
+        <div class="stats">
+            <span id="totalCount">总数: 0</span>
+            <span id="completedCount">已完成: 0</span>
+            <span id="remainingCount">剩余: 0</span>
+        </div>
+        
+        <div class="filter-buttons">
+            <button class="filter-btn active" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="active">未完成</button>
+            <button class="filter-btn" data-filter="completed">已完成</button>
+        </div>
+        
+        <ul id="todoList" class="todo-list">
+            <!-- 待办事项将在这里动态生成 -->
+        </ul>
+        
+        <div class="clear-completed-container">
+            <button id="clearCompleted" onclick="clearCompleted()">清除已完成</button>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
