@@ -3,51 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我的待办事项</title>
-    <link rel="stylesheet" href="style.css">
+    <title>伙伴群任务</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>📝 我的待办事项</h1>
+        <!-- 头部 -->
+        <header class="header">
+            <h1>🤝 伙伴群任务</h1>
+            <p class="subtitle">和朋友一起完成目标</p>
         </header>
 
-        <!-- 协作房间区域 -->
-        <div class="todo-input-container" style="border-bottom: 1px solid #f0f0f0;">
-            <input type="text" id="roomIdInput" placeholder="输入自定义房间名（如：我的团队）或点随机生成" maxlength="40" style="flex: 1;">
-            <button id="generateRoomBtn" style="background: #28a745;">随机生成</button>
-            <button id="createRoomBtn">创建/加入</button>
-            <button id="copyInviteBtn" title="复制邀请链接">复制链接</button>
-        </div>
-        <div class="stats" id="roomStatusBar" style="display: none;">
-            <span id="roomStatus">未加入房间</span>
-            <span style="font-size: 12px; color: #666; margin-left: 10px;">💡 通过复制链接分享给他人协作</span>
-        </div>
+        <!-- 群组区域 -->
+        <section class="group-section">
+            <div class="input-group">
+                <input type="text" id="groupName" placeholder="输入群组名称..." maxlength="20">
+                <button id="createGroup" class="btn-primary">创建群组</button>
+            </div>
+            
+            <!-- 群组信息 -->
+            <div id="groupInfo" class="group-info hidden">
+                <div class="info-card">
+                    <h3 id="currentGroupName">我的群组</h3>
+                    <p class="group-id">群组ID: <span id="groupId"></span></p>
+                    <button id="shareGroup" class="btn-secondary">分享群组</button>
+                </div>
+            </div>
+        </section>
 
-        <div class="todo-input-container">
-            <input type="text" id="todoInput" placeholder="输入新的待办事项..." maxlength="200">
-            <button id="addBtn">添加</button>
-        </div>
+        <!-- 任务区域 -->
+        <section class="task-section hidden" id="taskSection">
+            <!-- 添加任务 -->
+            <div class="add-task">
+                <div class="input-group">
+                    <input type="text" id="taskInput" placeholder="添加新任务..." maxlength="100">
+                    <button id="addTask" class="btn-primary">添加</button>
+                </div>
+            </div>
 
-        <div class="stats">
-            <span id="totalCount">总数: 0</span>
-            <span id="completedCount">已完成: 0</span>
-            <span id="remainingCount">剩余: 0</span>
-        </div>
+            <!-- 任务统计 -->
+            <div class="task-stats">
+                <span id="totalTasks">总任务: 0</span>
+                <span id="completedTasks">已完成: 0</span>
+            </div>
 
+            <!-- 任务列表 -->
+            <div class="task-list" id="taskList">
+                <div class="empty-state">
+                    <p>还没有任务，快来添加第一个吧！</p>
+                </div>
+            </div>
+        </section>
 
-
-        <ul id="todoList" class="todo-list"></ul>
-
-        <div class="clear-completed-container">
-            <button id="clearCompleted">清除已完成</button>
-        </div>
+        <!-- 底部信息 -->
+        <footer class="footer">
+            <p>💡 分享链接让朋友加入协作</p>
+        </footer>
     </div>
 
-    <!-- GitHub协作逻辑（100%免费） -->
-    <script src="github-collab.js"></script>
-    <!-- 本地待办逻辑 -->
     <script src="script.js"></script>
 </body>
 </html>
-
