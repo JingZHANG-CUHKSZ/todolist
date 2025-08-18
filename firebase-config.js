@@ -4,7 +4,7 @@ window.firebaseConfig = {
     apiKey: "AIzaSyDTsvqQ5TQ4O05Y7UCFPBHEMFYGVPn1eug",
     authDomain: "todolist-collab.firebaseapp.com",
     projectId: "todolist-collab",
-    storageBucket: "todolist-collab.firebasestorage.app",
+    storageBucket: "todolist-collab.firebasestorage.app", 
     messagingSenderId: "33529414557",
     appId: "1:33529414557:web:c610b831af410ede67e574"
 };
