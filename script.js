@@ -43,6 +43,18 @@ class GroupTaskManager {
                 this.createGroup();
             }
         });
+
+        // 加入群组
+        document.getElementById('joinGroup').addEventListener('click', () => {
+            this.joinGroup();
+        });
+
+        // 加入群组回车
+        document.getElementById('joinGroupInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.joinGroup();
+            }
+        });
     }
 
     // 创建群组
@@ -106,6 +118,115 @@ class GroupTaskManager {
     // 生成群组ID
     generateGroupId() {
         return Math.random().toString(36).substring(2, 8).toUpperCase();
+    }
+
+    // 加入群组
+    async joinGroup() {
+        const joinInput = document.getElementById('joinGroupInput');
+        const joinValue = joinInput.value.trim();
+
+        if (!joinValue) {
+            alert('请输入群组ID或名称');
+            return;
+        }
+
+        // 检查GitHub配置
+        let githubConfig = this.loadGithubConfigFromStorage();
+        
+        if (!githubConfig) {
+            const token = prompt('需要GitHub Token来加入群组：\n\n请输入你的GitHub Token\n\n如果没有token，可以去 https://github.com/settings/tokens 创建一个');
+            if (!token) {
+                return;
+            }
+            
+            this.githubConfig = {
+                token: token,
+                owner: 'JingZHANG-CUHKSZ',
+                repo: 'todolist',
+                branch: 'main'
+            };
+            this.saveGithubConfigToStorage();
+            githubConfig = this.githubConfig;
+        } else {
+            this.githubConfig = githubConfig;
+        }
+
+        try {
+            // 尝试按群组ID直接查找（ID通常是大写）
+            let groupId = joinValue.toUpperCase();
+            
+            try {
+                await this.loadFromGithub(groupId);
+                this.startAutoSync();
+                joinInput.value = '';
+                return;
+            } catch (error) {
+                // 如果直接查找失败，尝试按名称搜索
+                console.log('按ID查找失败，尝试按名称搜索...');
+            }
+
+            // 按群组名称搜索（不区分大小写）
+            const foundGroup = await this.searchGroupByName(joinValue);
+            if (foundGroup) {
+                await this.loadFromGithub(foundGroup.id);
+                this.startAutoSync();
+                joinInput.value = '';
+            } else {
+                alert(`未找到群组：${joinValue}\n\n请检查：\n1. 群组ID是否正确\n2. 群组名称是否准确\n3. 群组是否已创建`);
+            }
+
+        } catch (error) {
+            console.error('加入群组失败:', error);
+            alert('加入群组失败：' + error.message);
+        }
+    }
+
+    // 按名称搜索群组
+    async searchGroupByName(groupName) {
+        if (!this.githubConfig) return null;
+
+        try {
+            // 获取data文件夹下的所有文件
+            const response = await fetch(
+                `https://api.github.com/repos/${this.githubConfig.owner}/${this.githubConfig.repo}/contents/data`,
+                {
+                    headers: {
+                        'Authorization': `token ${this.githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const files = await response.json();
+            
+            // 搜索所有群组文件
+            for (const file of files) {
+                if (file.name.startsWith('group-') && file.name.endsWith('.json')) {
+                    try {
+                        // 获取文件内容
+                        const fileResponse = await fetch(file.download_url);
+                        const content = await fileResponse.json();
+                        
+                        // 检查群组名称是否匹配（不区分大小写）
+                        if (content.group && content.group.name && 
+                            content.group.name.toLowerCase() === groupName.toLowerCase()) {
+                            return content.group;
+                        }
+                    } catch (error) {
+                        console.error('读取群组文件失败:', file.name, error);
+                    }
+                }
+            }
+
+            return null;
+        } catch (error) {
+            console.error('搜索群组失败:', error);
+            throw error;
+        }
     }
 
     // 显示群组界面
