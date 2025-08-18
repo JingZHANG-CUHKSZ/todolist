@@ -12,9 +12,9 @@
         let syncInterval = null;
 
         // GitHub仓库信息（使用你现有的仓库）
-        const GITHUB_OWNER = 'JingZHANG-CUHKSZ';
-        const GITHUB_REPO = 'todolist';
-        const GITHUB_API = 'https://api.github.com';
+        const GITHUB_OWNER = GITHUB_CONFIG.OWNER;
+        const GITHUB_REPO = GITHUB_CONFIG.REPO;
+        const GITHUB_API = GITHUB_CONFIG.API_BASE;
 
         // 若 URL 中已有房间参数，自动加入
         const url = new URL(window.location.href);
@@ -84,7 +84,9 @@
         async function loadRoomData(roomId) {
             try {
                 const fileName = `room-${roomId}.json`;
-                const response = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rooms/${fileName}`);
+                const response = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rooms/${fileName}`, {
+                    headers: getAuthHeaders()
+                });
                 
                 if (response.ok) {
                     const data = await response.json();
@@ -121,7 +123,9 @@
                 // 先尝试获取文件（如果存在需要sha）
                 let sha = null;
                 try {
-                    const getResponse = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rooms/${fileName}`);
+                    const getResponse = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rooms/${fileName}`, {
+                        headers: getAuthHeaders()
+                    });
                     if (getResponse.ok) {
                         const fileData = await getResponse.json();
                         sha = fileData.sha;
@@ -140,9 +144,7 @@
 
                 await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rooms/${fileName}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: getAuthHeaders(),
                     body: JSON.stringify(payload)
                 });
 
