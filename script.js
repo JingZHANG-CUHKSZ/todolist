@@ -56,10 +56,10 @@ class GroupTaskManager {
         }
 
         // 检查是否需要GitHub配置
-        const needsGithubConfig = !this.loadGithubConfigFromUrl();
+        const needsGithubConfig = !this.loadGithubConfigFromStorage();
         
         if (needsGithubConfig) {
-            const token = prompt('请输入GitHub Token（用于数据同步）：\n\n如果没有token，可以去 https://github.com/settings/tokens 创建一个');
+            const token = prompt('请输入GitHub Token（用于数据同步）：\n\n如果没有token，可以去 https://github.com/settings/tokens 创建一个\n\n⚠️ Token会保存到本地，方便下次使用');
             if (!token) {
                 return;
             }
@@ -70,6 +70,9 @@ class GroupTaskManager {
                 repo: 'todolist',          // 使用现有仓库
                 branch: 'main'
             };
+            
+            // 保存到本地存储
+            this.saveGithubConfigToStorage();
         }
 
         // 生成群组ID
@@ -89,7 +92,7 @@ class GroupTaskManager {
             // 保存到GitHub
             await this.saveToGithub();
             this.showGroupInterface();
-            this.updateUrlForGithub();
+            this.updateUrlSimple(); // 使用简单URL
             this.startAutoSync();
         } catch (error) {
             alert('创建群组失败：' + error.message);
@@ -123,6 +126,10 @@ class GroupTaskManager {
 
     // 分享群组
     async shareGroup() {
+        if (!this.currentGroup) return;
+        
+        // 生成分享链接（包含隐藏token）
+        this.updateUrlSimple();
         const shareUrl = window.location.href;
         
         try {
@@ -286,9 +293,13 @@ class GroupTaskManager {
         const dataParam = urlParams.get('data');
         const groupParam = urlParams.get('group');
         
-        // 优先尝试GitHub同步模式
+        // 优先尝试GitHub同步模式（简单链接模式）
         if (groupParam) {
-            const githubConfig = this.loadGithubConfigFromUrl();
+            // 按优先级尝试加载GitHub配置
+            let githubConfig = this.loadGithubConfigFromFragment() || // 1. 从URL fragment加载（新方式）
+                               this.loadGithubConfigFromStorage() ||  // 2. 从本地存储加载
+                               this.loadGithubConfigFromUrl();        // 3. 从URL参数加载（兼容旧链接）
+            
             if (githubConfig) {
                 try {
                     await this.loadFromGithub(groupParam);
@@ -296,7 +307,10 @@ class GroupTaskManager {
                     return;
                 } catch (error) {
                     console.error('从GitHub加载失败:', error);
+                    alert('加载群组失败：' + error.message + '\n\n请联系群组创建者重新分享链接');
                 }
+            } else {
+                alert('无法加载群组配置\n\n请确保使用正确的分享链接，或联系群组创建者重新分享');
             }
         }
         
@@ -358,7 +372,49 @@ class GroupTaskManager {
 
     // === GitHub API 相关方法 ===
 
-    // 从URL加载GitHub配置
+    // 保存GitHub配置到本地存储
+    saveGithubConfigToStorage() {
+        if (!this.githubConfig) return;
+        
+        try {
+            localStorage.setItem('github_config', JSON.stringify(this.githubConfig));
+        } catch (error) {
+            console.error('保存GitHub配置失败:', error);
+        }
+    }
+
+    // 从本地存储加载GitHub配置
+    loadGithubConfigFromStorage() {
+        try {
+            const configStr = localStorage.getItem('github_config');
+            if (configStr) {
+                const config = JSON.parse(configStr);
+                this.githubConfig = config;
+                return config;
+            }
+        } catch (error) {
+            console.error('从本地存储加载GitHub配置失败:', error);
+        }
+        return null;
+    }
+
+    // 从URL fragment加载GitHub配置
+    loadGithubConfigFromFragment() {
+        const hash = window.location.hash;
+        if (!hash.startsWith('#token=')) return null;
+
+        try {
+            const tokenParam = hash.substring(7); // 去掉 '#token='
+            const config = JSON.parse(decodeURIComponent(escape(atob(tokenParam))));
+            this.githubConfig = config;
+            return config;
+        } catch (error) {
+            console.error('从fragment加载GitHub配置失败:', error);
+            return null;
+        }
+    }
+
+    // 从URL加载GitHub配置（兼容旧链接）
     loadGithubConfigFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
         const configParam = urlParams.get('config');
@@ -494,7 +550,29 @@ class GroupTaskManager {
         }, 10000);
     }
 
-    // 更新URL（GitHub模式）
+    // 更新URL（简单模式 - 群组ID + 隐藏token）
+    updateUrlSimple() {
+        if (!this.currentGroup || !this.githubConfig) return;
+
+        const url = new URL(window.location);
+        url.searchParams.set('group', this.currentGroup.id);
+        url.searchParams.delete('config'); // 删除配置参数
+        url.searchParams.delete('data'); // 删除旧的data参数
+        
+        // 将token加密后放在fragment中（#后面，不会发送到服务器）
+        const tokenData = {
+            token: this.githubConfig.token,
+            owner: this.githubConfig.owner,
+            repo: this.githubConfig.repo,
+            branch: this.githubConfig.branch
+        };
+        const encryptedToken = btoa(unescape(encodeURIComponent(JSON.stringify(tokenData))));
+        url.hash = `token=${encryptedToken}`;
+        
+        window.history.replaceState({}, '', url);
+    }
+
+    // 更新URL（完整模式 - 兼容旧版本）
     updateUrlForGithub() {
         if (!this.currentGroup || !this.githubConfig) return;
 
