@@ -14,9 +14,9 @@
 
         <!-- 协作房间区域 -->
         <div class="todo-input-container" style="border-bottom: 1px solid #f0f0f0;">
-            <input type="text" id="roomIdInput" placeholder="输入或生成房间号（例如：team123）" maxlength="40" style="flex: 1;">
-            <button id="createRoomBtn">创建房间</button>
-            <button id="joinRoomBtn">加入房间</button>
+            <input type="text" id="roomIdInput" placeholder="输入自定义房间名（如：我的团队）或点随机生成" maxlength="40" style="flex: 1;">
+            <button id="generateRoomBtn" style="background: #28a745;">随机生成</button>
+            <button id="createRoomBtn">创建/加入</button>
             <button id="copyInviteBtn" title="复制邀请链接">复制链接</button>
         </div>
         <div class="stats" id="roomStatusBar" style="display: none;">
@@ -47,13 +47,8 @@
         </div>
     </div>
 
-    <!-- Firebase SDK（Compat 版本，便于直接使用） -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-    <!-- 你的 Firebase 配置（占位，需填写） -->
-    <script src="firebase-config.js"></script>
-    <!-- 协作逻辑 -->
-    <script src="collab.js"></script>
+    <!-- GitHub协作逻辑（100%免费） -->
+    <script src="github-collab.js"></script>
     <!-- 本地待办逻辑 -->
     <script src="script.js"></script>
 </body>
