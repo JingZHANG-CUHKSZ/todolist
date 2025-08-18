@@ -4,8 +4,24 @@
     "name": "西湖",
     "createdAt": "2025-08-18T18:03:22.622Z",
     "createdBy": "创建者",
-    "tasks": []
+    "tasks": [
+      {
+        "id": "1755540212508",
+        "text": "加油",
+        "completed": false,
+        "createdAt": "2025-08-18T18:03:32.508Z",
+        "createdBy": "我"
+      }
+    ]
   },
-  "tasks": [],
-  "lastUpdated": "2025-08-18T18:03:22.622Z"
+  "tasks": [
+    {
+      "id": "1755540212508",
+      "text": "加油",
+      "completed": false,
+      "createdAt": "2025-08-18T18:03:32.508Z",
+      "createdBy": "我"
+    }
+  ],
+  "lastUpdated": "2025-08-18T18:03:32.509Z"
 }
