@@ -4,8 +4,24 @@
     "name": "西湖醋鱼",
     "createdAt": "2025-08-18T19:46:31.803Z",
     "createdBy": "创建者",
-    "tasks": []
+    "tasks": [
+      {
+        "id": "1755546396403",
+        "text": "滑雪",
+        "completed": false,
+        "createdAt": "2025-08-18T19:46:36.403Z",
+        "createdBy": "我"
+      }
+    ]
   },
-  "tasks": [],
-  "lastUpdated": "2025-08-18T19:46:31.803Z"
+  "tasks": [
+    {
+      "id": "1755546396403",
+      "text": "滑雪",
+      "completed": false,
+      "createdAt": "2025-08-18T19:46:36.403Z",
+      "createdBy": "我"
+    }
+  ],
+  "lastUpdated": "2025-08-18T19:46:36.404Z"
 }
