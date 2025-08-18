@@ -49,12 +49,7 @@ class GroupTaskManager {
             this.joinGroup();
         });
 
-        // 加入群组回车
-        document.getElementById('joinGroupInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.joinGroup();
-            }
-        });
+
     }
 
     // 创建群组
@@ -122,7 +117,7 @@ class GroupTaskManager {
 
     // 加入群组
     async joinGroup() {
-        const joinInput = document.getElementById('joinGroupInput');
+        const joinInput = document.getElementById('groupName');
         const joinValue = joinInput.value.trim();
 
         if (!joinValue) {
@@ -130,26 +125,17 @@ class GroupTaskManager {
             return;
         }
 
-        // 检查GitHub配置
-        let githubConfig = this.loadGithubConfigFromStorage();
+        // 检查是否有GitHub配置
+        let githubConfig = this.loadGithubConfigFromStorage() || 
+                          this.loadGithubConfigFromFragment() ||
+                          this.loadGithubConfigFromUrl();
         
         if (!githubConfig) {
-            const token = prompt('需要GitHub Token来加入群组：\n\n请输入你的GitHub Token\n\n如果没有token，可以去 https://github.com/settings/tokens 创建一个');
-            if (!token) {
-                return;
-            }
-            
-            this.githubConfig = {
-                token: token,
-                owner: 'JingZHANG-CUHKSZ',
-                repo: 'todolist',
-                branch: 'main'
-            };
-            this.saveGithubConfigToStorage();
-            githubConfig = this.githubConfig;
-        } else {
-            this.githubConfig = githubConfig;
+            alert('无法加入群组！\n\n请通过以下方式加入：\n1. 使用朋友分享的完整链接\n2. 或者先创建群组获取权限');
+            return;
         }
+
+        this.githubConfig = githubConfig;
 
         try {
             // 尝试按群组ID直接查找（ID通常是大写）
@@ -172,12 +158,12 @@ class GroupTaskManager {
                 this.startAutoSync();
                 joinInput.value = '';
             } else {
-                alert(`未找到群组：${joinValue}\n\n请检查：\n1. 群组ID是否正确\n2. 群组名称是否准确\n3. 群组是否已创建`);
+                alert(`未找到群组：${joinValue}\n\n可能原因：\n1. 群组ID或名称不正确\n2. 群组尚未创建\n3. 您没有访问权限\n\n建议使用朋友分享的完整链接加入`);
             }
 
         } catch (error) {
             console.error('加入群组失败:', error);
-            alert('加入群组失败：' + error.message);
+            alert('加入群组失败：' + error.message + '\n\n建议使用朋友分享的完整链接加入');
         }
     }
 

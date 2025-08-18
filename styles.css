@@ -70,6 +70,7 @@ body {
     display: flex;
     gap: 12px;
     margin-bottom: 16px;
+    flex-wrap: wrap;
 }
 
 .input-group input {
@@ -98,6 +99,7 @@ body {
     cursor: pointer;
     transition: all 0.2s ease;
     white-space: nowrap;
+    min-width: 100px;
 }
 
 .btn-primary {
@@ -126,28 +128,7 @@ body {
     margin-bottom: 32px;
 }
 
-.or-divider {
-    text-align: center;
-    margin: 20px 0;
-    position: relative;
-}
 
-.or-divider::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: #e0e0e0;
-}
-
-.or-divider span {
-    background: white;
-    padding: 0 15px;
-    color: #666;
-    font-size: 14px;
-}
 
 .info-card {
     background: var(--card-bg);
