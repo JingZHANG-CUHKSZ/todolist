@@ -6,13 +6,6 @@
     "createdBy": "创建者",
     "tasks": [
       {
-        "id": "1755546618966",
-        "text": "蓉做饭",
-        "completed": false,
-        "createdAt": "2025-08-18T19:50:18.966Z",
-        "createdBy": "我"
-      },
-      {
         "id": "1755546611000",
         "text": "猫咪剧本杀",
         "completed": false,
@@ -26,24 +19,10 @@
         "createdAt": "2025-08-18T19:48:43.366Z",
         "createdBy": "我",
         "completedAt": "2025-08-18T19:48:58.564Z"
-      },
-      {
-        "id": "1755546396403",
-        "text": "滑雪",
-        "completed": false,
-        "createdAt": "2025-08-18T19:46:36.403Z",
-        "createdBy": "我"
       }
     ]
   },
   "tasks": [
-    {
-      "id": "1755546618966",
-      "text": "蓉做饭",
-      "completed": false,
-      "createdAt": "2025-08-18T19:50:18.966Z",
-      "createdBy": "我"
-    },
     {
       "id": "1755546611000",
       "text": "猫咪剧本杀",
@@ -58,14 +37,7 @@
       "createdAt": "2025-08-18T19:48:43.366Z",
       "createdBy": "我",
       "completedAt": "2025-08-18T19:48:58.564Z"
-    },
-    {
-      "id": "1755546396403",
-      "text": "滑雪",
-      "completed": false,
-      "createdAt": "2025-08-18T19:46:36.403Z",
-      "createdBy": "我"
     }
   ],
-  "lastUpdated": "2025-08-18T19:50:18.966Z"
+  "lastUpdated": "2025-08-18T19:50:22.978Z"
 }
