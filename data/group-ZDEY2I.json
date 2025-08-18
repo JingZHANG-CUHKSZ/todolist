@@ -21,13 +21,6 @@
         "completedAt": "2025-08-18T19:48:58.564Z"
       },
       {
-        "id": "1755546399487",
-        "text": "做饭",
-        "completed": false,
-        "createdAt": "2025-08-18T19:46:39.487Z",
-        "createdBy": "我"
-      },
-      {
         "id": "1755546396403",
         "text": "滑雪",
         "completed": false,
@@ -53,13 +46,6 @@
       "completedAt": "2025-08-18T19:48:58.564Z"
     },
     {
-      "id": "1755546399487",
-      "text": "做饭",
-      "completed": false,
-      "createdAt": "2025-08-18T19:46:39.487Z",
-      "createdBy": "我"
-    },
-    {
       "id": "1755546396403",
       "text": "滑雪",
       "completed": false,
@@ -67,5 +53,5 @@
       "createdBy": "我"
     }
   ],
-  "lastUpdated": "2025-08-18T19:50:11.000Z"
+  "lastUpdated": "2025-08-18T19:50:13.869Z"
 }
