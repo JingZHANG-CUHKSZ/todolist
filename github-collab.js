@@ -1,5 +1,5 @@
-// GitHub协作逻辑 - 100%免费方案
-(function setupGitHubCollab() {
+// 本地协作逻辑 - 通过URL分享，完全无服务器
+(function setupLocalCollab() {
     document.addEventListener('DOMContentLoaded', () => {
         const roomInput = document.getElementById('roomIdInput');
         const generateBtn = document.getElementById('generateRoomBtn');
@@ -7,47 +7,37 @@
         const copyBtn = document.getElementById('copyInviteBtn');
         const roomStatusBar = document.getElementById('roomStatusBar');
         const roomStatus = document.getElementById('roomStatus');
-        const tokenStatus = document.getElementById('tokenStatus');
-        const setTokenBtn = document.getElementById('setTokenBtn');
 
         let currentRoomId = null;
-        let syncInterval = null;
         
-        // 更新token状态显示
-        function updateTokenStatus() {
-            const token = getUserToken();
-            if (token) {
-                tokenStatus.textContent = `GitHub Token: 已设置 (${token.substring(0, 8)}...)`;
-                setTokenBtn.textContent = '重新设置';
-            } else {
-                tokenStatus.textContent = 'GitHub Token: 未设置';
-                setTokenBtn.textContent = '设置Token';
+        // 压缩和解压缩数据
+        function compressData(data) {
+            return btoa(encodeURIComponent(JSON.stringify(data)));
+        }
+        
+        function decompressData(compressed) {
+            try {
+                return JSON.parse(decodeURIComponent(atob(compressed)));
+            } catch (e) {
+                return null;
             }
         }
         
-        // 初始化时更新状态
-        updateTokenStatus();
-
-        // GitHub仓库信息
-        const GITHUB_OWNER = 'JingZHANG-CUHKSZ';
-        const GITHUB_REPO = 'todolist';
-        const GITHUB_API = 'https://api.github.com';
-        
-        // 获取用户token
-        function getUserToken() {
-            return localStorage.getItem('github_token');
+        // 从URL获取房间数据
+        function getRoomDataFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const roomData = urlParams.get('data');
+            return roomData ? decompressData(roomData) : null;
         }
         
-        function getAuthHeaders() {
-            const token = getUserToken();
-            if (!token) {
-                throw new Error('需要GitHub token');
-            }
-            return {
-                'Authorization': `token ${token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/vnd.github.v3+json'
-            };
+        // 更新URL中的房间数据
+        function updateUrlWithRoomData(roomId, todos) {
+            const data = { roomId, todos, lastUpdated: new Date().toISOString() };
+            const compressed = compressData(data);
+            const url = new URL(window.location);
+            url.searchParams.set('room', roomId);
+            url.searchParams.set('data', compressed);
+            window.history.replaceState({}, '', url);
         }
 
         // 若 URL 中已有房间参数，自动加入
@@ -55,28 +45,8 @@
         const prefillRoom = url.searchParams.get('room');
         if (prefillRoom) {
             roomInput.value = prefillRoom;
-            tryJoinRoom(prefillRoom);
+            joinRoom(prefillRoom);
         }
-
-        setTokenBtn.addEventListener('click', () => {
-            const currentToken = getUserToken();
-            const message = currentToken 
-                ? '重新设置GitHub Personal Access Token:\n\n(需要有repo权限)' 
-                : '请输入GitHub Personal Access Token:\n\n(需要有repo权限，获取方式：GitHub Settings → Developer settings → Personal access tokens)';
-            
-            const token = prompt(message, currentToken || '');
-            if (token !== null) { // 用户点击了确定（即使输入为空）
-                if (token.trim()) {
-                    localStorage.setItem('github_token', token.trim());
-                    updateTokenStatus();
-                    alert('Token已保存！');
-                } else {
-                    localStorage.removeItem('github_token');
-                    updateTokenStatus();
-                    alert('Token已清除！');
-                }
-            }
-        });
 
         generateBtn.addEventListener('click', () => {
             const newId = generateRoomId();
@@ -89,26 +59,23 @@
                 alert('请输入房间名或点击"随机生成"');
                 return;
             }
-            
-            // 检查是否有token
-            if (!getUserToken()) {
-                alert('请先点击"设置Token"按钮设置GitHub Personal Access Token！');
-                return;
-            }
-            
-            tryJoinRoom(inputId);
+            joinRoom(inputId);
         });
 
         copyBtn.addEventListener('click', async () => {
-            const id = roomInput.value.trim();
-            if (!id) return alert('请先输入或生成房间号');
-            const inviteUrl = `${location.origin}${location.pathname}?room=${encodeURIComponent(id)}`;
+            if (!currentRoomId) {
+                alert('请先创建或加入房间');
+                return;
+            }
+            
+            // 复制当前完整的URL（包含数据）
+            const currentUrl = window.location.href;
             try {
-                await navigator.clipboard.writeText(inviteUrl);
+                await navigator.clipboard.writeText(currentUrl);
                 copyBtn.textContent = '已复制';
                 setTimeout(() => (copyBtn.textContent = '复制链接'), 1200);
             } catch {
-                alert('复制失败，请手动复制：\n' + inviteUrl);
+                alert('复制失败，请手动复制：\n' + currentUrl);
             }
         });
 
@@ -119,114 +86,35 @@
             return s;
         }
 
-        async function tryJoinRoom(roomId) {
+        function joinRoom(roomId) {
             currentRoomId = roomId;
-
-            // 更新 URL
-            const url = new URL(location.href);
-            url.searchParams.set('room', roomId);
-            history.replaceState({}, '', url);
 
             // 显示状态栏
             roomStatusBar.style.display = 'flex';
-            roomStatus.textContent = `已加入房间：${roomId} (GitHub同步)`;
+            roomStatus.textContent = `已加入房间：${roomId} (本地协作)`;
 
-            // 首次加载数据
-            await loadRoomData(roomId);
-
-            // 开启定时同步（每3秒检查一次）
-            if (syncInterval) clearInterval(syncInterval);
-            syncInterval = setInterval(() => loadRoomData(roomId), 3000);
+            // 尝试从URL加载数据
+            const roomData = getRoomDataFromUrl();
+            if (roomData && roomData.roomId === roomId) {
+                // 如果URL中有匹配的房间数据，加载它
+                if (window.todoManager && roomData.todos) {
+                    todoManager.todos = roomData.todos;
+                    todoManager.render();
+                    todoManager.updateStats();
+                }
+                roomStatus.textContent = `已加入房间：${roomId} (已同步 ${new Date(roomData.lastUpdated).toLocaleTimeString()})`;
+            } else {
+                // 新房间，初始化空数据
+                updateUrlWithRoomData(roomId, []);
+            }
 
             // 替换todoManager的方法
             patchTodoManager(roomId);
         }
 
-        async function loadRoomData(roomId) {
-            try {
-                const fileName = `room-${roomId}.json`;
-                const response = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rooms/${fileName}`, {
-                    headers: getAuthHeaders()
-                });
-                
-                if (response.ok) {
-                    const data = await response.json();
-                    const content = JSON.parse(atob(data.content));
-                    
-                    if (window.todoManager) {
-                        const newTodos = content.todos || [];
-                        // 只有数据真的变化时才更新
-                        if (JSON.stringify(todoManager.todos) !== JSON.stringify(newTodos)) {
-                            todoManager.todos = newTodos;
-                            todoManager.render();
-                            todoManager.updateStats();
-                        }
-                    }
-                } else if (response.status === 404) {
-                    // 房间不存在，创建空房间
-                    await saveRoomData(roomId, []);
-                } else if (response.status === 403) {
-                    console.error('GitHub token权限不足或无效');
-                    alert('GitHub token权限不足！请确保token有repo权限。');
-                } else if (response.status === 401) {
-                    console.error('GitHub token无效');
-                    localStorage.removeItem('github_token');
-                    alert('GitHub token无效，请重新输入。');
-                }
-            } catch (error) {
-                if (error.message.includes('需要GitHub token')) {
-                    alert('请先设置GitHub token');
-                    return;
-                }
-                console.log('加载房间数据失败：', error);
-            }
-        }
-
-        async function saveRoomData(roomId, todos) {
-            try {
-                const fileName = `room-${roomId}.json`;
-                const content = JSON.stringify({
-                    roomId,
-                    lastUpdated: new Date().toISOString(),
-                    todos: todos
-                }, null, 2);
-
-                // 先尝试获取文件（如果存在需要sha）
-                let sha = null;
-                try {
-                    const getResponse = await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rooms/${fileName}`, {
-                        headers: getAuthHeaders()
-                    });
-                    if (getResponse.ok) {
-                        const fileData = await getResponse.json();
-                        sha = fileData.sha;
-                    }
-                } catch (e) {
-                    // 文件不存在，sha保持null
-                }
-
-                // 保存到GitHub
-                const payload = {
-                    message: `更新房间 ${roomId} 的待办数据`,
-                    content: btoa(unescape(encodeURIComponent(content))),
-                };
-                
-                if (sha) payload.sha = sha;
-
-                await fetch(`${GITHUB_API}/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/rooms/${fileName}`, {
-                    method: 'PUT',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(payload)
-                });
-
-            } catch (error) {
-                if (error.message.includes('需要GitHub token')) {
-                    alert('请先设置GitHub token');
-                    return;
-                }
-                console.error('保存失败：', error);
-                alert('保存失败，请检查网络连接和token权限');
-            }
+        // 保存房间数据到URL
+        function saveRoomData(roomId, todos) {
+            updateUrlWithRoomData(roomId, todos);
         }
 
         function patchTodoManager(roomId) {
@@ -236,11 +124,12 @@
 
                 // 覆盖保存方法
                 todoManager.saveTodos = function () {
-                    // GitHub版本通过其他方法保存
+                    // 本地协作版本通过URL保存
+                    saveRoomData(roomId, this.todos);
                 };
 
                 // 重写添加方法
-                todoManager.addTodo = async function () {
+                todoManager.addTodo = function () {
                     const input = document.getElementById('todoInput');
                     const text = (input.value || '').trim();
                     if (!text) { alert('请输入待办事项内容！'); return; }
@@ -258,11 +147,11 @@
                     this.render();
                     this.updateStats();
                     
-                    await saveRoomData(roomId, this.todos);
+                    saveRoomData(roomId, this.todos);
                 };
 
                 // 重写切换状态方法
-                todoManager.toggleTodo = async function (id) {
+                todoManager.toggleTodo = function (id) {
                     this.todos = this.todos.map(todo => {
                         if (todo.id === id) {
                             todo.completed = !todo.completed;
@@ -273,21 +162,21 @@
                     
                     this.render();
                     this.updateStats();
-                    await saveRoomData(roomId, this.todos);
+                    saveRoomData(roomId, this.todos);
                 };
 
                 // 重写删除方法
-                todoManager.deleteTodo = async function (id) {
+                todoManager.deleteTodo = function (id) {
                     if (!confirm('确定要删除这个待办事项吗？')) return;
                     
                     this.todos = this.todos.filter(todo => todo.id !== id);
                     this.render();
                     this.updateStats();
-                    await saveRoomData(roomId, this.todos);
+                    saveRoomData(roomId, this.todos);
                 };
 
                 // 重写清除已完成方法
-                todoManager.clearCompleted = async function () {
+                todoManager.clearCompleted = function () {
                     const completedCount = this.todos.filter(todo => todo.completed).length;
                     
                     if (completedCount === 0) {
@@ -299,15 +188,11 @@
                         this.todos = this.todos.filter(todo => !todo.completed);
                         this.render();
                         this.updateStats();
-                        await saveRoomData(roomId, this.todos);
+                        saveRoomData(roomId, this.todos);
                     }
                 };
             }, 50);
         }
 
-        // 页面关闭时清理
-        window.addEventListener('beforeunload', () => {
-            if (syncInterval) clearInterval(syncInterval);
-        });
     });
 })();
