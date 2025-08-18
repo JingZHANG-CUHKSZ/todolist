@@ -7,7 +7,7 @@ class GroupTaskManager {
         
         // 统一仓库配置 - 内置token，所有人共用
         this.githubConfig = {
-            token: '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',
+            token: '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',
             owner: 'JingZHANG-CUHKSZ',
             repo: 'todolist',
             branch: 'main'
