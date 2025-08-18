@@ -6,6 +6,13 @@
     "createdBy": "创建者",
     "tasks": [
       {
+        "id": "1755546399487",
+        "text": "做饭",
+        "completed": false,
+        "createdAt": "2025-08-18T19:46:39.487Z",
+        "createdBy": "我"
+      },
+      {
         "id": "1755546396403",
         "text": "滑雪",
         "completed": false,
@@ -16,6 +23,13 @@
   },
   "tasks": [
     {
+      "id": "1755546399487",
+      "text": "做饭",
+      "completed": false,
+      "createdAt": "2025-08-18T19:46:39.487Z",
+      "createdBy": "我"
+    },
+    {
       "id": "1755546396403",
       "text": "滑雪",
       "completed": false,
@@ -23,5 +37,5 @@
       "createdBy": "我"
     }
   ],
-  "lastUpdated": "2025-08-18T19:46:36.404Z"
+  "lastUpdated": "2025-08-18T19:46:39.487Z"
 }
