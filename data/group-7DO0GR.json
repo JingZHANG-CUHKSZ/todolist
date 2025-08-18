@@ -6,6 +6,13 @@
     "createdBy": "创建者",
     "tasks": [
       {
+        "id": "1755540322955",
+        "text": "滑雪",
+        "completed": false,
+        "createdAt": "2025-08-18T18:05:22.955Z",
+        "createdBy": "我"
+      },
+      {
         "id": "1755540216428",
         "text": "任务2",
         "completed": false,
@@ -23,6 +30,13 @@
   },
   "tasks": [
     {
+      "id": "1755540322955",
+      "text": "滑雪",
+      "completed": false,
+      "createdAt": "2025-08-18T18:05:22.955Z",
+      "createdBy": "我"
+    },
+    {
       "id": "1755540216428",
       "text": "任务2",
       "completed": false,
@@ -37,5 +51,5 @@
       "createdBy": "我"
     }
   ],
-  "lastUpdated": "2025-08-18T18:03:36.429Z"
+  "lastUpdated": "2025-08-18T18:05:22.956Z"
 }
