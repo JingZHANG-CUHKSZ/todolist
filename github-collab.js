@@ -93,11 +93,21 @@
             roomStatusBar.style.display = 'flex';
             roomStatus.textContent = `已加入房间：${roomId} (本地协作)`;
 
+            // 清空localStorage避免数据污染
+            localStorage.removeItem('todos');
+
+            // 先清空当前数据
+            if (window.todoManager) {
+                todoManager.todos = [];
+                todoManager.render();
+                todoManager.updateStats();
+            }
+
             // 尝试从URL加载数据
             const roomData = getRoomDataFromUrl();
-            if (roomData && roomData.roomId === roomId) {
+            if (roomData && roomData.roomId === roomId && roomData.todos) {
                 // 如果URL中有匹配的房间数据，加载它
-                if (window.todoManager && roomData.todos) {
+                if (window.todoManager) {
                     todoManager.todos = roomData.todos;
                     todoManager.render();
                     todoManager.updateStats();
@@ -121,6 +131,17 @@
             const checkManager = setInterval(() => {
                 if (!window.todoManager) return;
                 clearInterval(checkManager);
+
+                // 绑定按钮事件
+                const addBtn = document.getElementById('addBtn');
+                const clearBtn = document.getElementById('clearCompleted');
+                
+                if (addBtn) {
+                    addBtn.onclick = () => todoManager.addTodo();
+                }
+                if (clearBtn) {
+                    clearBtn.onclick = () => todoManager.clearCompleted();
+                }
 
                 // 覆盖保存方法
                 todoManager.saveTodos = function () {

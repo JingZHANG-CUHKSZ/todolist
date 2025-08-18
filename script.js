@@ -252,29 +252,7 @@ function clearCompleted() {
 document.addEventListener('DOMContentLoaded', () => {
     todoManager = new TodoManager();
     
-    // 添加一些示例数据（仅在首次访问时）
-    if (todoManager.todos.length === 0) {
-        const examples = [
-            '学习新的编程技能',
-            '完成项目文档',
-            '锻炼身体30分钟'
-        ];
-        
-        examples.forEach((text, index) => {
-            const todo = {
-                id: Date.now() + index,
-                text: text,
-                completed: index === 2, // 第一个示例标记为已完成
-                createdAt: new Date().toLocaleString('zh-CN'),
-                completedAt: index === 2 ? new Date().toLocaleString('zh-CN') : null
-            };
-            todoManager.todos.push(todo);
-        });
-        
-        todoManager.saveTodos();
-        todoManager.render();
-        todoManager.updateStats();
-    }
+    // 不再自动添加示例数据，保持干净的初始状态
 });
 
 // 添加一些增强功能
