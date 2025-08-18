@@ -15,9 +15,10 @@
       {
         "id": "1755540212508",
         "text": "加油",
-        "completed": false,
+        "completed": true,
         "createdAt": "2025-08-18T18:03:32.508Z",
-        "createdBy": "我"
+        "createdBy": "我",
+        "completedAt": "2025-08-18T18:06:02.425Z"
       }
     ]
   },
@@ -32,10 +33,11 @@
     {
       "id": "1755540212508",
       "text": "加油",
-      "completed": false,
+      "completed": true,
       "createdAt": "2025-08-18T18:03:32.508Z",
-      "createdBy": "我"
+      "createdBy": "我",
+      "completedAt": "2025-08-18T18:06:02.425Z"
     }
   ],
-  "lastUpdated": "2025-08-18T18:05:26.149Z"
+  "lastUpdated": "2025-08-18T18:06:02.425Z"
 }
