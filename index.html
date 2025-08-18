@@ -12,6 +12,12 @@
             <h1>📝 我的待办事项</h1>
         </header>
 
+        <!-- GitHub Token 状态 -->
+        <div class="stats" id="tokenStatusBar" style="border-bottom: 1px solid #f0f0f0; padding-bottom: 10px;">
+            <span id="tokenStatus">GitHub Token: 未设置</span>
+            <button id="setTokenBtn" style="background: #007bff; color: white; border: none; padding: 5px 10px; border-radius: 3px; margin-left: 10px;">设置Token</button>
+        </div>
+        
         <!-- 协作房间区域 -->
         <div class="todo-input-container" style="border-bottom: 1px solid #f0f0f0;">
             <input type="text" id="roomIdInput" placeholder="输入自定义房间名（如：我的团队）或点随机生成" maxlength="40" style="flex: 1;">
@@ -47,8 +53,6 @@
         </div>
     </div>
 
-    <!-- GitHub配置文件 -->
-    <script src="github-config.js"></script>
     <!-- GitHub协作逻辑（100%免费） -->
     <script src="github-collab.js"></script>
     <!-- 本地待办逻辑 -->

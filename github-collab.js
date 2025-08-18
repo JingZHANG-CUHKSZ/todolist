@@ -7,14 +7,48 @@
         const copyBtn = document.getElementById('copyInviteBtn');
         const roomStatusBar = document.getElementById('roomStatusBar');
         const roomStatus = document.getElementById('roomStatus');
+        const tokenStatus = document.getElementById('tokenStatus');
+        const setTokenBtn = document.getElementById('setTokenBtn');
 
         let currentRoomId = null;
         let syncInterval = null;
+        
+        // 更新token状态显示
+        function updateTokenStatus() {
+            const token = getUserToken();
+            if (token) {
+                tokenStatus.textContent = `GitHub Token: 已设置 (${token.substring(0, 8)}...)`;
+                setTokenBtn.textContent = '重新设置';
+            } else {
+                tokenStatus.textContent = 'GitHub Token: 未设置';
+                setTokenBtn.textContent = '设置Token';
+            }
+        }
+        
+        // 初始化时更新状态
+        updateTokenStatus();
 
-        // GitHub仓库信息（使用你现有的仓库）
-        const GITHUB_OWNER = GITHUB_CONFIG.OWNER;
-        const GITHUB_REPO = GITHUB_CONFIG.REPO;
-        const GITHUB_API = GITHUB_CONFIG.API_BASE;
+        // GitHub仓库信息
+        const GITHUB_OWNER = 'JingZHANG-CUHKSZ';
+        const GITHUB_REPO = 'todolist';
+        const GITHUB_API = 'https://api.github.com';
+        
+        // 获取用户token
+        function getUserToken() {
+            return localStorage.getItem('github_token');
+        }
+        
+        function getAuthHeaders() {
+            const token = getUserToken();
+            if (!token) {
+                throw new Error('需要GitHub token');
+            }
+            return {
+                'Authorization': `token ${token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json'
+            };
+        }
 
         // 若 URL 中已有房间参数，自动加入
         const url = new URL(window.location.href);
@@ -23,6 +57,26 @@
             roomInput.value = prefillRoom;
             tryJoinRoom(prefillRoom);
         }
+
+        setTokenBtn.addEventListener('click', () => {
+            const currentToken = getUserToken();
+            const message = currentToken 
+                ? '重新设置GitHub Personal Access Token:\n\n(需要有repo权限)' 
+                : '请输入GitHub Personal Access Token:\n\n(需要有repo权限，获取方式：GitHub Settings → Developer settings → Personal access tokens)';
+            
+            const token = prompt(message, currentToken || '');
+            if (token !== null) { // 用户点击了确定（即使输入为空）
+                if (token.trim()) {
+                    localStorage.setItem('github_token', token.trim());
+                    updateTokenStatus();
+                    alert('Token已保存！');
+                } else {
+                    localStorage.removeItem('github_token');
+                    updateTokenStatus();
+                    alert('Token已清除！');
+                }
+            }
+        });
 
         generateBtn.addEventListener('click', () => {
             const newId = generateRoomId();
@@ -35,6 +89,13 @@
                 alert('请输入房间名或点击"随机生成"');
                 return;
             }
+            
+            // 检查是否有token
+            if (!getUserToken()) {
+                alert('请先点击"设置Token"按钮设置GitHub Personal Access Token！');
+                return;
+            }
+            
             tryJoinRoom(inputId);
         });
 
@@ -104,10 +165,20 @@
                 } else if (response.status === 404) {
                     // 房间不存在，创建空房间
                     await saveRoomData(roomId, []);
+                } else if (response.status === 403) {
+                    console.error('GitHub token权限不足或无效');
+                    alert('GitHub token权限不足！请确保token有repo权限。');
+                } else if (response.status === 401) {
+                    console.error('GitHub token无效');
+                    localStorage.removeItem('github_token');
+                    alert('GitHub token无效，请重新输入。');
                 }
             } catch (error) {
-                console.log('加载房间数据失败（可能是网络问题）：', error);
-                // 失败时不显示错误，静默处理
+                if (error.message.includes('需要GitHub token')) {
+                    alert('请先设置GitHub token');
+                    return;
+                }
+                console.log('加载房间数据失败：', error);
             }
         }
 
@@ -149,8 +220,12 @@
                 });
 
             } catch (error) {
+                if (error.message.includes('需要GitHub token')) {
+                    alert('请先设置GitHub token');
+                    return;
+                }
                 console.error('保存失败：', error);
-                alert('保存失败，请检查网络连接');
+                alert('保存失败，请检查网络连接和token权限');
             }
         }
 
