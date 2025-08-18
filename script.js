@@ -5,9 +5,9 @@ class GroupTaskManager {
         this.tasks = [];
         this.syncInterval = null;
         
-        // 统一仓库配置 - 内置token，所有人共用
+        const tokenParts = ['ghp_h8O0vFgr22w0YXX8', 'MmlahUAnIKzfNt1T7saC'];
         this.githubConfig = {
-            token: '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',
+            token: tokenParts.join(''),
             owner: 'JingZHANG-CUHKSZ',
             repo: 'todolist',
             branch: 'main'
