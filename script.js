@@ -3,6 +3,8 @@ class GroupTaskManager {
     constructor() {
         this.currentGroup = null;
         this.tasks = [];
+        this.githubConfig = null;
+        this.syncInterval = null;
         this.init();
     }
 
@@ -44,13 +46,30 @@ class GroupTaskManager {
     }
 
     // 创建群组
-    createGroup() {
+    async createGroup() {
         const groupNameInput = document.getElementById('groupName');
         const groupName = groupNameInput.value.trim();
 
         if (!groupName) {
             alert('请输入群组名称');
             return;
+        }
+
+        // 检查是否需要GitHub配置
+        const needsGithubConfig = !this.loadGithubConfigFromUrl();
+        
+        if (needsGithubConfig) {
+            const token = prompt('请输入GitHub Token（用于数据同步）：\n\n如果没有token，可以去 https://github.com/settings/tokens 创建一个');
+            if (!token) {
+                return;
+            }
+            
+            this.githubConfig = {
+                token: token,
+                owner: 'JingZHANG-CUHKSZ', // 你的GitHub用户名
+                repo: 'todolist',          // 使用现有仓库
+                branch: 'main'
+            };
         }
 
         // 生成群组ID
@@ -60,12 +79,22 @@ class GroupTaskManager {
             id: groupId,
             name: groupName,
             createdAt: new Date().toISOString(),
+            createdBy: '创建者',
             tasks: []
         };
 
         this.tasks = [];
-        this.showGroupInterface();
-        this.updateUrl();
+        
+        try {
+            // 保存到GitHub
+            await this.saveToGithub();
+            this.showGroupInterface();
+            this.updateUrlForGithub();
+            this.startAutoSync();
+        } catch (error) {
+            alert('创建群组失败：' + error.message);
+            return;
+        }
         
         // 清空输入框
         groupNameInput.value = '';
@@ -114,7 +143,7 @@ class GroupTaskManager {
     }
 
     // 添加任务
-    addTask() {
+    async addTask() {
         const taskInput = document.getElementById('taskInput');
         const taskText = taskInput.value.trim();
 
@@ -136,11 +165,21 @@ class GroupTaskManager {
         taskInput.value = '';
         this.updateTaskList();
         this.updateStats();
-        this.updateUrl();
+        
+        // 保存到GitHub（如果有配置）
+        if (this.githubConfig) {
+            try {
+                await this.saveToGithub();
+            } catch (error) {
+                console.error('保存失败:', error);
+            }
+        } else {
+            this.updateUrl();
+        }
     }
 
     // 切换任务状态
-    toggleTask(taskId) {
+    async toggleTask(taskId) {
         const task = this.tasks.find(t => t.id === taskId);
         if (task) {
             task.completed = !task.completed;
@@ -149,19 +188,39 @@ class GroupTaskManager {
             this.currentGroup.tasks = this.tasks;
             this.updateTaskList();
             this.updateStats();
-            this.updateUrl();
+            
+            // 保存到GitHub（如果有配置）
+            if (this.githubConfig) {
+                try {
+                    await this.saveToGithub();
+                } catch (error) {
+                    console.error('保存失败:', error);
+                }
+            } else {
+                this.updateUrl();
+            }
         }
     }
 
     // 删除任务
-    deleteTask(taskId) {
+    async deleteTask(taskId) {
         if (confirm('确定要删除这个任务吗？')) {
             this.tasks = this.tasks.filter(t => t.id !== taskId);
             this.currentGroup.tasks = this.tasks;
             
             this.updateTaskList();
             this.updateStats();
-            this.updateUrl();
+            
+            // 保存到GitHub（如果有配置）
+            if (this.githubConfig) {
+                try {
+                    await this.saveToGithub();
+                } catch (error) {
+                    console.error('保存失败:', error);
+                }
+            } else {
+                this.updateUrl();
+            }
         }
     }
 
@@ -181,7 +240,7 @@ class GroupTaskManager {
         taskList.innerHTML = this.tasks.map(task => `
             <div class="task-item">
                 <div class="task-checkbox ${task.completed ? 'checked' : ''}" 
-                     onclick="taskManager.toggleTask('${task.id}')"></div>
+                     onclick="taskManager.handleToggleTask('${task.id}')"></div>
                 <div class="task-content">
                     <div class="task-text ${task.completed ? 'completed' : ''}">${this.escapeHtml(task.text)}</div>
                     <div class="task-meta">
@@ -190,7 +249,7 @@ class GroupTaskManager {
                     </div>
                 </div>
                 <div class="task-actions">
-                    <button class="btn-small btn-delete" onclick="taskManager.deleteTask('${task.id}')">删除</button>
+                    <button class="btn-small btn-delete" onclick="taskManager.handleDeleteTask('${task.id}')">删除</button>
                 </div>
             </div>
         `).join('');
@@ -214,7 +273,7 @@ class GroupTaskManager {
             tasks: this.tasks
         };
 
-        const compressed = btoa(encodeURIComponent(JSON.stringify(data)));
+        const compressed = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
         const url = new URL(window.location);
         url.searchParams.set('data', compressed);
         
@@ -222,14 +281,30 @@ class GroupTaskManager {
     }
 
     // 从URL加载数据
-    loadFromUrl() {
+    async loadFromUrl() {
         const urlParams = new URLSearchParams(window.location.search);
         const dataParam = urlParams.get('data');
+        const groupParam = urlParams.get('group');
         
+        // 优先尝试GitHub同步模式
+        if (groupParam) {
+            const githubConfig = this.loadGithubConfigFromUrl();
+            if (githubConfig) {
+                try {
+                    await this.loadFromGithub(groupParam);
+                    this.startAutoSync();
+                    return;
+                } catch (error) {
+                    console.error('从GitHub加载失败:', error);
+                }
+            }
+        }
+        
+        // 回退到URL参数模式
         if (!dataParam) return;
 
         try {
-            const data = JSON.parse(decodeURIComponent(atob(dataParam)));
+            const data = JSON.parse(decodeURIComponent(escape(atob(dataParam))));
             
             if (data.group && data.tasks) {
                 this.currentGroup = data.group;
@@ -263,6 +338,180 @@ class GroupTaskManager {
         if (diffDays < 7) return `${diffDays}天前`;
         
         return date.toLocaleDateString('zh-CN');
+    }
+
+    // === 同步包装器方法（用于HTML onclick调用）===
+
+    // 处理任务状态切换（同步包装器）
+    handleToggleTask(taskId) {
+        this.toggleTask(taskId).catch(error => {
+            console.error('切换任务状态失败:', error);
+        });
+    }
+
+    // 处理任务删除（同步包装器）
+    handleDeleteTask(taskId) {
+        this.deleteTask(taskId).catch(error => {
+            console.error('删除任务失败:', error);
+        });
+    }
+
+    // === GitHub API 相关方法 ===
+
+    // 从URL加载GitHub配置
+    loadGithubConfigFromUrl() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const configParam = urlParams.get('config');
+        
+        if (!configParam) return null;
+
+        try {
+            const config = JSON.parse(decodeURIComponent(escape(atob(configParam))));
+            this.githubConfig = config;
+            return config;
+        } catch (error) {
+            console.error('加载GitHub配置失败:', error);
+            return null;
+        }
+    }
+
+    // 保存数据到GitHub
+    async saveToGithub() {
+        if (!this.githubConfig || !this.currentGroup) return;
+
+        const data = {
+            group: this.currentGroup,
+            tasks: this.tasks,
+            lastUpdated: new Date().toISOString()
+        };
+
+        const fileName = `data/group-${this.currentGroup.id}.json`;
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+
+        try {
+            // 先尝试获取文件（检查是否存在）
+            let sha = null;
+            try {
+                const response = await fetch(
+                    `https://api.github.com/repos/${this.githubConfig.owner}/${this.githubConfig.repo}/contents/${fileName}`,
+                    {
+                        headers: {
+                            'Authorization': `token ${this.githubConfig.token}`,
+                            'Accept': 'application/vnd.github.v3+json'
+                        }
+                    }
+                );
+                
+                if (response.ok) {
+                    const fileData = await response.json();
+                    sha = fileData.sha;
+                }
+            } catch (e) {
+                // 文件不存在，sha保持null
+            }
+
+            // 创建或更新文件
+            const updateResponse = await fetch(
+                `https://api.github.com/repos/${this.githubConfig.owner}/${this.githubConfig.repo}/contents/${fileName}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${this.githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        message: `Update group ${this.currentGroup.name} tasks`,
+                        content: content,
+                        branch: this.githubConfig.branch,
+                        ...(sha && { sha })
+                    })
+                }
+            );
+
+            if (!updateResponse.ok) {
+                const error = await updateResponse.text();
+                throw new Error(`GitHub API错误: ${error}`);
+            }
+
+        } catch (error) {
+            console.error('保存到GitHub失败:', error);
+            throw error;
+        }
+    }
+
+    // 从GitHub加载数据
+    async loadFromGithub(groupId) {
+        if (!this.githubConfig) return;
+
+        const fileName = `data/group-${groupId}.json`;
+
+        try {
+            const response = await fetch(
+                `https://api.github.com/repos/${this.githubConfig.owner}/${this.githubConfig.repo}/contents/${fileName}`,
+                {
+                    headers: {
+                        'Authorization': `token ${this.githubConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const fileData = await response.json();
+            const content = JSON.parse(decodeURIComponent(escape(atob(fileData.content))));
+
+            if (content.group && content.tasks) {
+                this.currentGroup = content.group;
+                this.tasks = content.tasks || [];
+                this.showGroupInterface();
+            }
+
+        } catch (error) {
+            console.error('从GitHub加载失败:', error);
+            throw error;
+        }
+    }
+
+    // 开始自动同步
+    startAutoSync() {
+        if (this.syncInterval) {
+            clearInterval(this.syncInterval);
+        }
+
+        // 每10秒同步一次
+        this.syncInterval = setInterval(async () => {
+            if (this.githubConfig && this.currentGroup) {
+                try {
+                    await this.loadFromGithub(this.currentGroup.id);
+                } catch (error) {
+                    console.error('自动同步失败:', error);
+                }
+            }
+        }, 10000);
+    }
+
+    // 更新URL（GitHub模式）
+    updateUrlForGithub() {
+        if (!this.currentGroup || !this.githubConfig) return;
+
+        const configData = {
+            token: this.githubConfig.token,
+            owner: this.githubConfig.owner,
+            repo: this.githubConfig.repo,
+            branch: this.githubConfig.branch
+        };
+
+        const compressed = btoa(unescape(encodeURIComponent(JSON.stringify(configData))));
+        const url = new URL(window.location);
+        url.searchParams.set('group', this.currentGroup.id);
+        url.searchParams.set('config', compressed);
+        url.searchParams.delete('data'); // 删除旧的data参数
+        
+        window.history.replaceState({}, '', url);
     }
 }
 
