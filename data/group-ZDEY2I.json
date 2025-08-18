@@ -6,6 +6,13 @@
     "createdBy": "创建者",
     "tasks": [
       {
+        "id": "1755546523366",
+        "text": "测试",
+        "completed": false,
+        "createdAt": "2025-08-18T19:48:43.366Z",
+        "createdBy": "我"
+      },
+      {
         "id": "1755546405252",
         "text": "剧本杀",
         "completed": false,
@@ -30,6 +37,13 @@
   },
   "tasks": [
     {
+      "id": "1755546523366",
+      "text": "测试",
+      "completed": false,
+      "createdAt": "2025-08-18T19:48:43.366Z",
+      "createdBy": "我"
+    },
+    {
       "id": "1755546405252",
       "text": "剧本杀",
       "completed": false,
@@ -51,5 +65,5 @@
       "createdBy": "我"
     }
   ],
-  "lastUpdated": "2025-08-18T19:46:45.252Z"
+  "lastUpdated": "2025-08-18T19:48:43.368Z"
 }
