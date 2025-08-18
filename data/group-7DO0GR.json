@@ -6,6 +6,13 @@
     "createdBy": "创建者",
     "tasks": [
       {
+        "id": "1755540216428",
+        "text": "任务2",
+        "completed": false,
+        "createdAt": "2025-08-18T18:03:36.428Z",
+        "createdBy": "我"
+      },
+      {
         "id": "1755540212508",
         "text": "加油",
         "completed": false,
@@ -16,6 +23,13 @@
   },
   "tasks": [
     {
+      "id": "1755540216428",
+      "text": "任务2",
+      "completed": false,
+      "createdAt": "2025-08-18T18:03:36.428Z",
+      "createdBy": "我"
+    },
+    {
       "id": "1755540212508",
       "text": "加油",
       "completed": false,
@@ -23,5 +37,5 @@
       "createdBy": "我"
     }
   ],
-  "lastUpdated": "2025-08-18T18:03:32.509Z"
+  "lastUpdated": "2025-08-18T18:03:36.429Z"
 }
