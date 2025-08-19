@@ -6,6 +6,13 @@
     "createdBy": "创建者",
     "tasks": [
       {
+        "id": "1755566034760",
+        "text": "测试2",
+        "completed": false,
+        "createdAt": "2025-08-19T01:13:54.760Z",
+        "createdBy": "我"
+      },
+      {
         "id": "1755546706602",
         "text": "大连旅游",
         "completed": false,
@@ -59,6 +66,13 @@
   },
   "tasks": [
     {
+      "id": "1755566034760",
+      "text": "测试2",
+      "completed": false,
+      "createdAt": "2025-08-19T01:13:54.760Z",
+      "createdBy": "我"
+    },
+    {
       "id": "1755546706602",
       "text": "大连旅游",
       "completed": false,
@@ -109,5 +123,5 @@
       "completedAt": "2025-08-18T19:48:58.564Z"
     }
   ],
-  "lastUpdated": "2025-08-18T19:51:46.603Z"
+  "lastUpdated": "2025-08-19T01:13:54.761Z"
 }
